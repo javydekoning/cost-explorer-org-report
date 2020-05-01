@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Creates a bucket and lambda function to store daily cost reports in the format: 
+  Date, Account, Service, AmortizedCost. This will help with generic financial reporting.
+  This NEEDS to run in your Organization Master account.
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: cost-explorer-org-report
+    Description:  >
+      Creates a bucket and lambda function to store daily cost reports in the format: 
+      Date, Account, Service, AmortizedCost. This will help with generic financial reporting.
+      This NEEDS to run in your Organization Master account.
+    Author: Javy de Koning
+    ReadmeUrl: README.md
+    Labels: ['CostExplorer', 'CostReport','csv']
+    HomePageUrl: https://github.com/javydekoning/cost-explorer-org-report
+    SemanticVersion: 1.0.0
+    SourceCodeUrl: https://github.com/javydekoning/cost-explorer-org-report
+
+Parameters:
+  DaysToReport:
+    Type: String
+    Default: 28
+    Description: The number of days of data you'd like in your CSV export. Defaults to 28
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 180
+
+Resources:
+  CeReportFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: cost-explorer-org-report/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      MemorySize: 512
+      Timeout: 180
+      Policies:
+        - S3CrudPolicy:
+            BucketName: 
+              Ref: Bucket
+        - Statement:
+          - Sid: GetCostExplorerData
+            Effect: Allow
+            Action:
+            - ce:Get*
+            - ce:DescribeCostCategoryDefinition
+            Resource: '*'
+      Environment:
+        Variables:
+            bucket: 
+              Ref: Bucket
+            days: 
+              Ref: DaysToReport
+      Events:
+        CheckWebsiteScheduledEvent:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 9 * * ? *)
+
+  Bucket:
+    Type: 'AWS::S3::Bucket'
