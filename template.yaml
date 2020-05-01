@@ -14,6 +14,8 @@ Metadata:
       This NEEDS to run in your Organization Master account.
     Author: Javy de Koning
     ReadmeUrl: README.md
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE
     Labels: ['CostExplorer', 'CostReport','csv']
     HomePageUrl: https://github.com/javydekoning/cost-explorer-org-report
     SemanticVersion: 1.0.0
